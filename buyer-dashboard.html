@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Dashboard - FreshFoods Ltd. (Colombo)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#059669',
+                        primaryDark: '#047857',
+                        secondary: '#0ea5e9',
+                        accent: '#6366f1',
+                        surface: '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .nav-item {
+            transition: all 0.2s ease;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            color: #059669;
+            border-right: 3px solid #059669;
+        }
+        .nav-item.active {
+            font-weight: 600;
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.1);
+        }
+        .map-container {
+            position: relative;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ecfdf5 100%);
+            overflow: hidden;
+        }
+        .map-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #059669;
+            border: 2px solid white;
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pulse-dot 2s infinite;
+        }
+        .map-dot:hover {
+            transform: scale(1.5);
+            z-index: 10;
+        }
+        .map-dot.active {
+            background: #0ea5e9;
+            box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.3);
+            animation: none;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.2); }
+            50% { box-shadow: 0 0 0 8px rgba(5, 150, 105, 0.1); }
+        }
+        .map-tooltip {
+            position: absolute;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e293b;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 20;
+            white-space: nowrap;
+        }
+        .map-dot:hover .map-tooltip {
+            opacity: 1;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .progress-ring {
+            transition: stroke-dashoffset 1s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .chart-bar {
+            transition: height 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .farm-card-image {
+            transition: transform 0.5s ease;
+        }
+        .farm-card:hover .farm-card-image {
+            transform: scale(1.08);
+        }
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+        /* Sri Lanka map shape approximation */
+        .sl-map {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .delivery-row {
+            transition: all 0.2s ease;
+        }
+        .delivery-row:hover {
+            background: #f0fdf4;
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col z-20 hidden md:flex">
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary/10 p-2 rounded-xl">
+                        <i class="fas fa-leaf text-primary text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-slate-900 text-lg leading-tight">FreshFoods</h1>
+                        <p class="text-xs text-slate-500">Ltd. Colombo</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-4 space-y-1">
+                <a href="#" class="nav-item active flex items-center gap-3 px-6 py-3 text-sm text-slate-700">
+                    <i class="fas fa-home w-5 text-center"></i>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item flex items-center gap-3 px-6 py-3 text-sm text-slate-600 hover:text-primary">
+                    <i class="fas fa-shopping-bag w-5 text-center"></i>
+                    My Orders
+                    <span class="ml-auto bg-primary text-white text-xs px-2 py-0.5 rounded-full">5</span>
+                </a>
+                <a href="#" class="nav-item flex items-center gap-3 px-6 py-3 text-sm text-slate-600 hover:text-primary">
+                    <i class="fas fa-clipboard-list w-5 text-center"></i>
+                    Requirements
+                </a>
+                <a href="#" class="nav-item flex items-center gap-3 px-6 py-3 text-sm text-slate-600 hover:text-primary">
+                    <i class="fas fa-credit-card w-5 text-center"></i>
+                    Payments
+                </a>
+                <a href="#" class="nav-item flex items-center gap-3 px-6 py-3 text-sm text-slate-600 hover:text-primary">
+                    <i class="fas fa-truck w-5 text-center"></i>
+                    Logistics
+                    <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">2</span>
+                </a>
+                <a href="#" class="nav-item flex items-center gap-3 px-6 py-3 text-sm text-slate-600 hover:text-primary">
+                    <i class="fas fa-search w-5 text-center"></i>
+                    Search
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-slate-100">
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="flex items-center gap-3 mb-3">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-900">Rohan Perera</p>
+                            <p class="text-xs text-slate-500">Procurement Manager</p>
+                        </div>
+                    </div>
+                    <button class="w-full text-xs text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-1">
+                        <i class="fas fa-sign-out-alt"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Mobile Header -->
+        <div class="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 z-30 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-primary/10 p-1.5 rounded-lg">
+                    <i class="fas fa-leaf text-primary"></i>
+                </div>
+                <span class="font-bold text-slate-900">FreshFoods</span>
+            </div>
+            <button class="text-slate-600 p-2">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto md:pt-0 pt-14">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+                <!-- Header -->
+                <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 slide-in">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Business Dashboard</h2>
+                        <p class="text-slate-500 mt-1 flex items-center gap-2">
+                            <i class="fas fa-building text-slate-400"></i>
+                            FreshFoods Ltd. (Colombo) • 
+                            <span class="text-primary font-medium">Active Buyer Account</span>
+                        </p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:border-primary hover:text-primary transition-all flex items-center gap-2">
+                            <i class="fas fa-download"></i>
+                            Export Report
+                        </button>
+                        <button onclick="showNewRequirement()" class="bg-primary hover:bg-primaryDark text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg shadow-primary/20 transition-all flex items-center gap-2">
+                            <i class="fas fa-plus"></i>
+                            New Requirement
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 slide-in" style="animation-delay: 0.1s">
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-primary/10 p-2 rounded-lg">
+                                <i class="fas fa-shopping-basket text-primary"></i>
+                            </div>
+                            <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span>
+                        </div>
+                        <p class="text-2xl font-bold text-slate-900">12</p>
+                        <p class="text-sm text-slate-500">Active Pre-Orders</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-amber-50 p-2 rounded-lg">
+                                <i class="fas fa-truck text-amber-600"></i>
+                            </div>
+                            <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">2 pending</span>
+                        </div>
+                        <p class="text-2xl font-bold text-slate-900">5</p>
+                        <p class="text-sm text-slate-500">Pending Deliveries</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-blue-50 p-2 rounded-lg">
+                                <i class="fas fa-wallet text-blue-600"></i>
+                            </div>
+                            <span class="text-xs font-medium text-slate-500">This month</span>
+                        </div>
+                        <p class="text-2xl font-bold text-slate-900">Rs 485K</p>
+                        <p class="text-sm text-slate-500">Total Payments</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="bg-purple-50 p-2 rounded-lg">
+                                <i class="fas fa-handshake text-purple-600"></i>
+                            </div>
+                            <span class="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">4 new</span>
+                        </div>
+                        <p class="text-2xl font-bold text-slate-900">28</p>
+                        <p class="text-sm text-slate-500">Partner Farmers</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
+                    <!-- Left Column: Map & Deliveries -->
+                    <div class="lg:col-span-2 space-y-8">
+
+                        <!-- Interactive Sri Lanka Map -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden slide-in" style="animation-delay: 0.2s">
+                            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                                <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-map-marked-alt text-primary"></i>
+                                    My Active Pre-Orders in Sri Lanka
+                                </h3>
+                                <div class="flex gap-2">
+                                    <span class="flex items-center gap-1 text-xs text-slate-500">
+                                        <span class="w-2 h-2 rounded-full bg-primary"></span> Active
+                                    </span>
+                                    <span class="flex items-center gap-1 text-xs text-slate-500">
+                                        <span class="w-2 h-2 rounded-full bg-secondary"></span> Delivering
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="map-container h-80 relative">
+                                <!-- SVG Sri Lanka Map -->
+                                <svg viewBox="0 0 400 600" class="w-full h-full absolute inset-0" style="opacity: 0.15;">
+                                    <path d="M180,20 C200,15 220,25 230,40 C240,55 235,75 245,90 C255,105 270,110 275,125 C280,140 270,155 275,170 C280,185 295,190 300,205 C305,220 295,235 300,250 C305,265 320,270 325,285 C330,300 320,315 325,330 C330,345 345,350 350,365 C355,380 345,395 350,410 C355,425 370,430 375,445 C380,460 370,475 375,490 C380,505 395,510 390,525 C385,540 370,545 365,560 C360,575 350,580 340,590 C330,600 320,595 310,585 C300,575 290,580 280,570 C270,560 260,565 250,555 C240,545 230,550 220,540 C210,530 200,535 190,525 C180,515 170,520 160,510 C150,500 140,505 130,495 C120,485 110,490 100,480 C90,470 80,475 70,465 C60,455 50,460 40,450 C30,440 20,445 15,435 C10,425 5,430 5,420 C5,410 15,405 20,395 C25,385 15,380 20,370 C25,360 35,355 40,345 C45,335 35,330 40,320 C45,310 55,305 60,295 C65,285 55,280 60,270 C65,260 75,255 80,245 C85,235 75,230 80,220 C85,210 95,205 100,195 C105,185 95,180 100,170 C105,160 115,155 120,145 C125,135 115,130 120,120 C125,110 135,105 140,95 C145,85 135,80 140,70 C145,60 155,55 160,45 C165,35 155,30 160,20 C165,10 175,5 180,20 Z" 
+                                    fill="#059669" stroke="#047857" stroke-width="2"/>
+                                </svg>
+                                
+                                <!-- Map Dots - Positioned relative to SVG coordinates -->
+                                <!-- Jaffna -->
+                                <div class="map-dot" style="left: 45%; top: 8%;" onclick="selectLocation('jaffna')">
+                                    <div class="map-tooltip">Jaffna • Tomato (Aug 15)</div>
+                                </div>
+                                <!-- Anuradhapura -->
+                                <div class="map-dot" style="left: 42%; top: 28%;" onclick="selectLocation('anuradhapura')">
+                                    <div class="map-tooltip">Anuradhapura • Pumpkin (Sep 05)</div>
+                                </div>
+                                <!-- Kandy -->
+                                <div class="map-dot active" style="left: 52%; top: 42%;" onclick="selectLocation('kandy')">
+                                    <div class="map-tooltip">Kandy • Leeks (Aug 25)</div>
+                                </div>
+                                <!-- Gampaha -->
+                                <div class="map-dot" style="left: 38%; top: 58%;" onclick="selectLocation('gampaha')">
+                                    <div class="map-tooltip">Gampaha • Tomato (Aug 20)</div>
+                                </div>
+                                <!-- Colombo -->
+                                <div class="map-dot" style="left: 35%; top: 65%;" onclick="selectLocation('colombo')">
+                                    <div class="map-tooltip">Colombo • HQ</div>
+                                </div>
+                                <!-- Ratnapura -->
+                                <div class="map-dot" style="left: 48%; top: 72%;" onclick="selectLocation('ratnapura')">
+                                    <div class="map-tooltip">Ratnapura • Beans (Sep 10)</div>
+                                </div>
+                                <!-- Galle -->
+                                <div class="map-dot" style="left: 40%; top: 85%;" onclick="selectLocation('galle')">
+                                    <div class="map-tooltip">Galle • Chilli (Aug 30)</div>
+                                </div>
+
+                                <!-- Location Detail Card (appears on click) -->
+                                <div id="locationCard" class="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-lg border border-slate-200 hidden slide-in">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-primary/10 p-2 rounded-lg">
+                                                <i class="fas fa-map-pin text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-slate-900" id="locName">Kandy District</p>
+                                                <p class="text-xs text-slate-500" id="locDetail">Peradeniya Farm • Leeks • 1,500kg</p>
+                                            </div>
+                                        </div>
+                                        <button onclick="closeLocationCard()" class="text-slate-400 hover:text-slate-600">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pending Deliveries -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden slide-in" style="animation-delay: 0.3s">
+                            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                                <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-truck-loading text-amber-600"></i>
+                                    Pending Deliveries
+                                </h3>
+                                <a href="#" class="text-sm text-primary hover:text-primaryDark font-medium">View All</a>
+                            </div>
+                            <div class="divide-y divide-slate-100">
+                                <!-- Delivery 1 -->
+                                <div class="delivery-row p-4 flex items-center gap-4 cursor-pointer" onclick="trackDelivery(1)">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
+                                            <i class="fas fa-pepper-hot text-red-500 text-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <p class="font-semibold text-slate-900 truncate">Tomato - Gampaha</p>
+                                            <span class="status-badge bg-blue-50 text-blue-700">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                                Logged
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                                            <span><i class="far fa-calendar mr-1"></i>Aug 20, 2026</span>
+                                            <span><i class="fas fa-weight-hanging mr-1"></i>800kg</span>
+                                            <span><i class="fas fa-user mr-1"></i>Upul Herath</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0 text-right">
+                                        <p class="text-sm font-bold text-slate-900">Rs 96,000</p>
+                                        <p class="text-xs text-slate-500">Rs 120/kg</p>
+                                    </div>
+                                </div>
+
+                                <!-- Delivery 2 -->
+                                <div class="delivery-row p-4 flex items-center gap-4 cursor-pointer" onclick="trackDelivery(2)">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
+                                            <i class="fas fa-leaf text-green-600 text-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <p class="font-semibold text-slate-900 truncate">Leeks - Kandy</p>
+                                            <span class="status-badge bg-amber-50 text-amber-700">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                In Transit
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                                            <span><i class="far fa-calendar mr-1"></i>Aug 25, 2026</span>
+                                            <span><i class="fas fa-weight-hanging mr-1"></i>400kg</span>
+                                            <span><i class="fas fa-user mr-1"></i>Sunil Fernando</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0 text-right">
+                                        <p class="text-sm font-bold text-slate-900">Rs 80,000</p>
+                                        <p class="text-xs text-slate-500">Rs 200/kg</p>
+                                    </div>
+                                </div>
+
+                                <!-- Delivery 3 -->
+                                <div class="delivery-row p-4 flex items-center gap-4 cursor-pointer" onclick="trackDelivery(3)">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center">
+                                            <i class="fas fa-carrot text-orange-500 text-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <p class="font-semibold text-slate-900 truncate">Carrot - Nuwara Eliya</p>
+                                            <span class="status-badge bg-purple-50 text-purple-700">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                                Processing
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                                            <span><i class="far fa-calendar mr-1"></i>Sep 02, 2026</span>
+                                            <span><i class="fas fa-weight-hanging mr-1"></i>600kg</span>
+                                            <span><i class="fas fa-user mr-1"></i>Kamal Jayasuriya</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0 text-right">
+                                        <p class="text-sm font-bold text-slate-900">Rs 150,000</p>
+                                        <p class="text-xs text-slate-500">Rs 250/kg</p>
+                                    </div>
+                                </div>
+
+                                <!-- Delivery 4 -->
+                                <div class="delivery-row p-4 flex items-center gap-4 cursor-pointer" onclick="trackDelivery(4)">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 rounded-xl bg-yellow-50 flex items-center justify-center">
+                                            <i class="fas fa-pepper-hot text-yellow-600 text-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <p class="font-semibold text-slate-900 truncate">Chilli - Galle</p>
+                                            <span class="status-badge bg-slate-100 text-slate-600">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                                Scheduled
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                                            <span><i class="far fa-calendar mr-1"></i>Aug 30, 2026</span>
+                                            <span><i class="fas fa-weight-hanging mr-1"></i>350kg</span>
+                                            <span><i class="fas fa-user mr-1"></i>Sanath Silva</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0 text-right">
+                                        <p class="text-sm font-bold text-slate-900">Rs 122,500</p>
+                                        <p class="text-xs text-slate-500">Rs 350/kg</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Overview -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 slide-in" style="animation-delay: 0.4s">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-chart-pie text-secondary"></i>
+                                    Payment Overview
+                                </h3>
+                                <select class="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-slate-50 text-slate-600 outline-none focus:border-primary">
+                                    <option>Last 30 Days</option>
+                                    <option>Last 3 Months</option>
+                                    <option>This Year</option>
+                                </select>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Chart -->
+                                <div class="space-y-4">
+                                    <div class="flex items-end justify-between h-40 gap-2">
+                                        <div class="flex-1 flex flex-col items-center gap-2">
+                                            <div class="w-full bg-slate-100 rounded-t-lg relative h-32 overflow-hidden">
+                                                <div class="chart-bar absolute bottom-0 w-full bg-primary/80 rounded-t-lg" style="height: 65%"></div>
+                                            </div>
+                                            <span class="text-xs text-slate-500 font-medium">May</span>
+                                        </div>
+                                        <div class="flex-1 flex flex-col items-center gap-2">
+                                            <div class="w-full bg-slate-100 rounded-t-lg relative h-32 overflow-hidden">
+                                                <div class="chart-bar absolute bottom-0 w-full bg-primary/80 rounded-t-lg" style="height: 45%"></div>
+                                            </div>
+                                            <span class="text-xs text-slate-500 font-medium">Jun</span>
+                                        </div>
+                                        <div class="flex-1 flex flex-col items-center gap-2">
+                                            <div class="w-full bg-slate-100 rounded-t-lg relative h-32 overflow-hidden">
+                                                <div class="chart-bar absolute bottom-0 w-full bg-primary/80 rounded-t-lg" style="height: 80%"></div>
+                                            </div>
+                                            <span class="text-xs text-slate-500 font-medium">Jul</span>
+                                        </div>
+                                        <div class="flex-1 flex flex-col items-center gap-2">
+                                            <div class="w-full bg-slate-100 rounded-t-lg relative h-32 overflow-hidden">
+                                                <div class="chart-bar absolute bottom-0 w-full bg-primary rounded-t-lg shadow-lg shadow-primary/20" style="height: 92%"></div>
+                                            </div>
+                                            <span class="text-xs text-primary font-bold">Aug</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Summary -->
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                <i class="fas fa-check-circle text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-medium text-slate-900">Completed Payments</p>
+                                                <p class="text-xs text-slate-500">8 transactions</p>
+                                            </div>
+                                        </div>
+                                        <span class="font-bold text-slate-900">Rs 320K</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                                                <i class="fas fa-clock text-amber-600"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-medium text-slate-900">Pending Advances</p>
+                                                <p class="text-xs text-slate-500">4 pre-orders</p>
+                                            </div>
+                                        </div>
+                                        <span class="font-bold text-slate-900">Rs 165K</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                                <i class="fas fa-wallet text-blue-600"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-medium text-slate-900">Balance Due</p>
+                                                <p class="text-xs text-slate-500">On delivery</p>
+                                            </div>
+                                        </div>
+                                        <span class="font-bold text-slate-900">Rs 280K</span>
+                                    </div>
+                                    
+                                    <!-- Circular Progress -->
+                                    <div class="flex items-center justify-center pt-2">
+                                        <div class="relative w-24 h-24">
+                                            <svg class="w-full h-full" viewBox="0 0 100 100">
+                                                <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+                                                <circle cx="50" cy="50" r="40" fill="none" stroke="#059669" stroke-width="8" 
+                                                    stroke-dasharray="251.2" stroke-dashoffset="62.8" stroke-linecap="round" class="progress-ring"/>
+                                            </svg>
+                                            <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                                <span class="text-lg font-bold text-slate-900">75%</span>
+                                                <span class="text-xs text-slate-500">Paid</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Search & Discovery -->
+                    <div class="space-y-8">
+                        
+                        <!-- Search Bar -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 slide-in" style="animation-delay: 0.3s">
+                            <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-search text-secondary"></i>
+                                Farmer Search & Discover
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="relative">
+                                    <i class="fas fa-search absolute left-3 top-3 text-slate-400"></i>
+                                    <input type="text" placeholder="Search farms, crops, or districts..." 
+                                        class="search-input w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary transition-all">
+                                </div>
+                                <div class="flex gap-2">
+                                    <select class="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 text-slate-600 outline-none focus:border-primary">
+                                        <option>All Crops</option>
+                                        <option>Vegetables</option>
+                                        <option>Fruits</option>
+                                        <option>Grains</option>
+                                    </select>
+                                    <select class="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 text-slate-600 outline-none focus:border-primary">
+                                        <option>All Districts</option>
+                                        <option>Kandy</option>
+                                        <option>Gampaha</option>
+                                        <option>Jaffna</option>
+                                    </select>
+                                </div>
+                                <button class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl text-sm font-medium transition-all">
+                                    Search Farmers
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Featured Farms -->
+                        <div class="space-y-4 slide-in" style="animation-delay: 0.4s">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-slate-900">Featured Farms</h3>
+                                <a href="#" class="text-xs text-primary hover:text-primaryDark font-medium">See All</a>
+                            </div>
+
+                            <!-- Farm Card 1 -->
+                            <div class="farm-card bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm card-hover cursor-pointer" onclick="viewFarm('peradeniya')">
+                                <div class="h-32 overflow-hidden relative">
+                                    <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=250&fit=crop" class="farm-card-image w-full h-full object-cover" alt="Peradeniya Farm">
+                                    <div class="absolute top-3 left-3">
+                                        <span class="bg-white/90 backdrop-blur-sm text-primary px-2 py-1 rounded-md text-xs font-bold">Verified</span>
+                                    </div>
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                                        <p class="text-white font-bold text-sm">Peradeniya Farm</p>
+                                        <p class="text-white/80 text-xs">Kandy District</p>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center gap-1 text-amber-400 text-xs">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <span class="text-slate-500 ml-1">5.0</span>
+                                        </div>
+                                        <span class="text-xs text-slate-500">127 reviews</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1 mb-3">
+                                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md">Leeks</span>
+                                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md">Beans</span>
+                                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md">Carrot</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-slate-600">Next: <span class="font-semibold text-slate-900">Aug 25</span></span>
+                                        <span class="font-bold text-primary">Rs 200/kg</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Farm Card 2 -->
+                            <div class="farm-card bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm card-hover cursor-pointer" onclick="viewFarm('gampaha')">
+                                <div class="h-32 overflow-hidden relative">
+                                    <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=250&fit=crop" class="farm-card-image w-full h-full object-cover" alt="Herath Farms">
+                                    <div class="absolute top-3 left-3">
+                                        <span class="bg-white/90 backdrop-blur-sm text-primary px-2 py-1 rounded-md text-xs font-bold">Verified</span>
+                                    </div>
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                                        <p class="text-white font-bold text-sm">Herath Organic Farms</p>
+                                        <p class="text-white/80 text-xs">Gampaha District</p>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center gap-1 text-amber-400 text-xs">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star-half-alt"></i>
+                                            <span class="text-slate-500 ml-1">4.8</span>
+                                        </div>
+                                        <span class="text-xs text-slate-500">89 reviews</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1 mb-3">
+                                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md">Tomato</span>
+                                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md">Brinjal</span>
+                                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md">Chilli</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-slate-600">Next: <span class="font-semibold text-slate-900">Aug 20</span></span>
+                                        <span class="font-bold text-primary">Rs 120/kg</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Farm Card 3 -->
+                            <div class="farm-card bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm card-hover cursor-pointer" onclick="viewFarm('jaffna')">
+                                <div class="h-32 overflow-hidden relative">
+                                    <img src="https://images.unsplash.com/photo-1595855759920-86582396756a?w=400&h=250&fit=crop" class="farm-card-image w-full h-full object-cover" alt="Northern Greens">
+                                    <div class="absolute top-3 left-3">
+                                        <span class="bg-white/90 backdrop-blur-sm text-blue-600 px-2 py-1 rounded-md text-xs font-bold">New</span>
+                                    </div>
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                                        <p class="text-white font-bold text-sm">Northern Greens</p>
+                                        <p class="text-white/80 text-xs">Jaffna District</p>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center gap-1 text-amber-400 text-xs">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="far fa-star"></i>
+                                            <span class="text-slate-500 ml-1">4.2</span>
+                                        </div>
+                                        <span class="text-xs text-slate-500">34 reviews</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1 mb-3">
+                                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md">Tomato</span>
+                                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md">Onion</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-slate-600">Next: <span class="font-semibold text-slate-900">Aug 15</span></span>
+                                        <span class="font-bold text-primary">Rs 110/kg</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="bg-gradient-to-br from-primary to-emerald-600 rounded-xl p-5 text-white shadow-lg slide-in" style="animation-delay: 0.5s">
+                            <h4 class="font-bold mb-3 text-sm">Monthly Savings</h4>
+                            <div class="flex items-end justify-between mb-2">
+                                <span class="text-3xl font-bold">Rs 42,500</span>
+                                <span class="text-sm text-emerald-100 bg-white/20 px-2 py-1 rounded-lg">+18%</span>
+                            </div>
+                            <p class="text-xs text-emerald-100 mb-4">Saved through direct farmer pre-orders vs. market rates</p>
+                            <div class="h-1 bg-white/20 rounded-full overflow-hidden">
+                                <div class="h-full bg-white rounded-full" style="width: 78%"></div>
+                            </div>
+                            <p class="text-xs text-emerald-100 mt-2">78% of monthly target achieved</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delivery Tracking Modal -->
+    <div id="deliveryModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeliveryModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg pointer-events-auto slide-up">
+                <div class="bg-primary px-6 py-4 flex justify-between items-center rounded-t-2xl">
+                    <h3 class="text-white font-bold text-lg">Delivery Tracking</h3>
+                    <button onclick="closeDeliveryModal()" class="text-white/80 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-xl">
+                        <div class="w-14 h-14 rounded-xl bg-red-50 flex items-center justify-center">
+                            <i class="fas fa-pepper-hot text-red-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-900">Tomato - Gampaha</p>
+                            <p class="text-sm text-slate-500">Order #FC-2026-8839 • 800kg</p>
+                        </div>
+                    </div>
+
+                    <div class="relative pl-8 space-y-6">
+                        <div class="absolute left-3 top-2 bottom-2 w-0.5 bg-slate-200"></div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-5 w-4 h-4 rounded-full bg-primary border-2 border-white shadow"></div>
+                            <div>
+                                <p class="font-semibold text-slate-900 text-sm">Order Logged</p>
+                                <p class="text-xs text-slate-500">Jun 15, 2026 • 10:30 AM</p>
+                                <p class="text-xs text-primary mt-1">Pre-order confirmed with Upul Herath</p>
+                            </div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-5 w-4 h-4 rounded-full bg-primary border-2 border-white shadow"></div>
+                            <div>
+                                <p class="font-semibold text-slate-900 text-sm">Advance Payment Received</p>
+                                <p class="text-xs text-slate-500">Jun 16, 2026 • 2:15 PM</p>
+                                <p class="text-xs text-slate-500 mt-1">Rs 28,800 (30% advance)</p>
+                            </div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-5 w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow animate-pulse"></div>
+                            <div>
+                                <p class="font-semibold text-amber-700 text-sm">Growth Monitoring</p>
+                                <p class="text-xs text-slate-500">Current stage • 75% ready</p>
+                                <p class="text-xs text-amber-600 mt-1">Next update: July 15</p>
+                            </div>
+                        </div>
+                        
+                        <div class="relative opacity-50">
+                            <div class="absolute -left-5 w-4 h-4 rounded-full bg-slate-300 border-2 border-white"></div>
+                            <div>
+                                <p class="font-semibold text-slate-700 text-sm">Harvest & Quality Check</p>
+                                <p class="text-xs text-slate-500">Scheduled: Aug 20, 2026</p>
+                            </div>
+                        </div>
+                        
+                        <div class="relative opacity-50">
+                            <div class="absolute -left-5 w-4 h-4 rounded-full bg-slate-300 border-2 border-white"></div>
+                            <div>
+                                <p class="font-semibold text-slate-700 text-sm">Delivery to Colombo</p>
+                                <p class="text-xs text-slate-500">Scheduled: Aug 21, 2026</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex gap-3">
+                        <button class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-lg text-sm font-medium transition-all">
+                            Contact Farmer
+                        </button>
+                        <button class="flex-1 bg-primary hover:bg-primaryDark text-white py-2.5 rounded-lg text-sm font-medium shadow-lg shadow-primary/20 transition-all">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Requirement Modal -->
+    <div id="requirementModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeRequirementModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto slide-up">
+                <div class="bg-primary px-6 py-4 flex justify-between items-center rounded-t-2xl">
+                    <h3 class="text-white font-bold text-lg">Post New Requirement</h3>
+                    <button onclick="closeRequirementModal()" class="text-white/80 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form class="p-6 space-y-4" onsubmit="submitRequirement(event)">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Crop Type</label>
+                        <select class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm">
+                            <option>Tomato</option>
+                            <option>Leeks</option>
+                            <option>Carrot</option>
+                            <option>Beans</option>
+                            <option>Chilli</option>
+                            <option>Pumpkin</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Quantity (kg)</label>
+                            <input type="number" required min="50" placeholder="500" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Target Price (Rs/kg)</label>
+                            <input type="number" required placeholder="150" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Required By</label>
+                        <input type="date" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Preferred Districts</label>
+                        <div class="flex flex-wrap gap-2">
+                            <label class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer hover:border-primary">
+                                <input type="checkbox" class="rounded text-primary focus:ring-primary"> Kandy
+                            </label>
+                            <label class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer hover:border-primary">
+                                <input type="checkbox" class="rounded text-primary focus:ring-primary"> Gampaha
+                            </label>
+                            <label class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer hover:border-primary">
+                                <input type="checkbox" class="rounded text-primary focus:ring-primary"> Jaffna
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Special Requirements</label>
+                        <textarea rows="2" placeholder="Organic, Grade A, packaging preferences..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm resize-none"></textarea>
+                    </div>
+                    <div class="pt-2 flex gap-3">
+                        <button type="button" onclick="closeRequirementModal()" class="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-all">Cancel</button>
+                        <button type="submit" class="flex-1 px-4 py-2.5 bg-primary hover:bg-primaryDark text-white rounded-lg font-medium shadow-lg shadow-primary/20 transition-all">Post Requirement</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const locationData = {
+            jaffna: { name: 'Jaffna District', detail: 'Northern Greens • Tomato • 500kg • Aug 15' },
+            anuradhapura: { name: 'Anuradhapura District', detail: 'Rajarata Farm • Pumpkin • 1,200kg • Sep 05' },
+            kandy: { name: 'Kandy District', detail: 'Peradeniya Farm • Leeks • 1,500kg • Aug 25' },
+            gampaha: { name: 'Gampaha District', detail: 'Herath Farms • Tomato • 800kg • Aug 20' },
+            colombo: { name: 'Colombo', detail: 'FreshFoods HQ • Receiving Hub' },
+            ratnapura: { name: 'Ratnapura District', detail: 'Gem Valley Farm • Beans • 400kg • Sep 10' },
+            galle: { name: 'Galle District', detail: 'Southern Harvest • Chilli • 350kg • Aug 30' }
+        };
+
+        function selectLocation(loc) {
+            const data = locationData[loc];
+            document.getElementById('locName').textContent = data.name;
+            document.getElementById('locDetail').textContent = data.detail;
+            document.getElementById('locationCard').classList.remove('hidden');
+            
+            // Update active dot
+            document.querySelectorAll('.map-dot').forEach(d => d.classList.remove('active'));
+            event.target.closest('.map-dot').classList.add('active');
+        }
+
+        function closeLocationCard() {
+            document.getElementById('locationCard').classList.add('hidden');
+        }
+
+        function trackDelivery(id) {
+            document.getElementById('deliveryModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeliveryModal() {
+            document.getElementById('deliveryModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function showNewRequirement() {
+            document.getElementById('requirementModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRequirementModal() {
+            document.getElementById('requirementModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function submitRequirement(e) {
+            e.preventDefault();
+            closeRequirementModal();
+            showToast('Requirement posted successfully! Farmers will be notified.');
+        }
+
+        function viewFarm(farm) {
+            showToast(`Opening ${farm} farm profile...`);
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 slide-up flex items-center gap-2';
+            toast.innerHTML = `<i class="fas fa-check-circle text-green-400"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Close modals on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDeliveryModal();
+                closeRequirementModal();
+                closeLocationCard();
+            }
+        });
+
+        // Animate chart bars on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.chart-bar').forEach(bar => {
+                    const height = bar.style.height;
+                    bar.style.height = '0%';
+                    setTimeout(() => bar.style.height = height, 100);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>

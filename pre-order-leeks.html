@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leeks - Pre-Order | Peradeniya Farm (Kandy)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#059669',
+                        primaryDark: '#047857',
+                        secondary: '#d97706',
+                        accent: '#0ea5e9',
+                        earth: '#92400e',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .timeline-line {
+            position: absolute;
+            left: 24px;
+            top: 40px;
+            bottom: 40px;
+            width: 2px;
+            background: linear-gradient(to bottom, #059669 0%, #059669 var(--progress, 60%), #e2e8f0 var(--progress, 60%), #e2e8f0 100%);
+        }
+        .stage-dot {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stage-dot.active {
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.2);
+            transform: scale(1.1);
+        }
+        .stage-card {
+            transition: all 0.3s ease;
+        }
+        .stage-card:hover {
+            transform: translateX(4px);
+        }
+        .reserve-card {
+            box-shadow: 0 20px 60px -15px rgba(5, 150, 105, 0.3);
+        }
+        .hero-image {
+            mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .slide-up {
+            animation: slideUp 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .demand-bar {
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .quantity-btn:active {
+            transform: scale(0.95);
+        }
+        .success-checkmark {
+            animation: checkmark 0.5s ease-in-out forwards;
+        }
+        @keyframes checkmark {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary/10 p-2 rounded-lg">
+                        <i class="fas fa-leaf text-primary text-lg"></i>
+                    </div>
+                    <span class="font-bold text-slate-900 text-lg">FarmConnect</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="text-slate-500 hover:text-primary transition-colors relative">
+                        <i class="fas fa-shopping-cart text-lg"></i>
+                        <span id="cartBadge" class="absolute -top-1 -right-2 h-5 w-5 bg-primary text-white text-xs rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+                    <div class="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center">
+                        <i class="fas fa-user text-slate-500 text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="relative h-80 md:h-96 overflow-hidden bg-slate-900">
+        <img src="https://images.unsplash.com/photo-1602769516974-f3c7b3e7a447?w=1200&h=600&fit=crop" alt="Fresh Leeks" class="w-full h-full object-cover opacity-90 hero-image">
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 md:p-10 max-w-7xl mx-auto">
+            <div class="slide-up" style="animation-delay: 0.1s">
+                <span class="inline-flex items-center gap-1.5 bg-primary/20 backdrop-blur-sm text-emerald-100 px-3 py-1 rounded-full text-sm font-medium mb-3 border border-primary/30">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                    </span>
+                    Now Accepting Pre-Orders
+                </span>
+                <h1 class="text-3xl md:text-5xl font-bold text-white mb-2">Leeks - Pre-Order</h1>
+                <p class="text-emerald-100 text-lg md:text-xl flex items-center gap-2">
+                    <i class="fas fa-map-marker-alt text-emerald-400"></i>
+                    Peradeniya Farm, Kandy District
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-16 relative z-10">
+        
+        <!-- Top Info Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- Left: Farmer Profile & Key Details -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Farmer Profile Card -->
+                <div class="glass-panel rounded-2xl p-6 shadow-lg slide-up" style="animation-delay: 0.2s">
+                    <div class="flex flex-col sm:flex-row gap-5 items-start">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face" alt="Sunil Fernando" class="w-20 h-20 rounded-2xl object-cover border-2 border-white shadow-md">
+                            <div class="absolute -bottom-2 -right-2 bg-blue-500 text-white p-1.5 rounded-lg shadow-lg">
+                                <i class="fas fa-check text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex flex-wrap items-center gap-3 mb-1">
+                                <h2 class="text-xl font-bold text-slate-900">Sunil Fernando</h2>
+                                <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md text-xs font-semibold border border-blue-200 flex items-center gap-1">
+                                    <i class="fas fa-shield-alt"></i> Verified Farmer
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1 mb-2">
+                                <div class="flex text-amber-400 text-sm">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="text-sm text-slate-500 ml-1">5.0 (127 reviews)</span>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                Third-generation farmer specializing in organic leeks cultivation. 
+                                Peradeniya Farm has been supplying fresh produce to Kandy markets for over 25 years.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Details Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 slide-up" style="animation-delay: 0.3s">
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+                        <div class="bg-amber-50 p-3 rounded-xl">
+                            <i class="fas fa-calendar-alt text-amber-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Harvest Date</p>
+                            <p class="text-lg font-bold text-slate-900">Aug 25, 2026</p>
+                            <p class="text-xs text-amber-600 font-medium">68 days remaining</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+                        <div class="bg-blue-50 p-3 rounded-xl">
+                            <i class="fas fa-weight-hanging text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Yield</p>
+                            <p class="text-lg font-bold text-slate-900">1,500 kg</p>
+                            <p class="text-xs text-blue-600 font-medium">Premium grade</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+                        <div class="bg-primary/10 p-3 rounded-xl">
+                            <i class="fas fa-tag text-primary text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Pre-Order Price</p>
+                            <p class="text-lg font-bold text-slate-900">Rs 200<span class="text-sm font-normal text-slate-500">/kg</span></p>
+                            <p class="text-xs text-green-600 font-medium">15% below market</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Growth Timeline -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 slide-up" style="animation-delay: 0.4s">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fas fa-seedling text-primary"></i>
+                            Growth Timeline
+                        </h3>
+                        <span class="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Current Stage: 3 of 5</span>
+                    </div>
+                    
+                    <div class="relative pl-2">
+                        <div class="timeline-line" style="--progress: 55%"></div>
+                        
+                        <!-- Stage 1: Complete -->
+                        <div class="relative flex gap-4 mb-8 stage-card">
+                            <div class="stage-dot active z-10 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg flex-shrink-0">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="flex-1 pt-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="font-bold text-slate-900">Waga Pathan (Seed Preparation)</h4>
+                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Completed</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-2">Seeds germinated in nursery beds. Soil pH optimized to 6.5. Initial organic compost applied.</p>
+                                <div class="flex gap-2 text-xs text-slate-500">
+                                    <span><i class="far fa-calendar mr-1"></i>May 15 - Jun 01</span>
+                                    <span><i class="fas fa-thermometer-half mr-1"></i>22-28°C</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 2: Complete -->
+                        <div class="relative flex gap-4 mb-8 stage-card">
+                            <div class="stage-dot active z-10 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg flex-shrink-0">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="flex-1 pt-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="font-bold text-slate-900">Bethma (Transplanting)</h4>
+                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Completed</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-2">Seedlings transplanted to main field. 30cm spacing maintained. Drip irrigation system activated.</p>
+                                <div class="flex gap-2 text-xs text-slate-500">
+                                    <span><i class="far fa-calendar mr-1"></i>Jun 02 - Jun 20</span>
+                                    <span><i class="fas fa-tint mr-1"></i>Daily 2L/plant</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 3: Current -->
+                        <div class="relative flex gap-4 mb-8 stage-card">
+                            <div class="stage-dot active z-10 w-12 h-12 rounded-full bg-white border-4 border-primary text-primary flex items-center justify-center shadow-lg flex-shrink-0 relative">
+                                <div class="absolute inset-0 rounded-full pulse-ring bg-primary/30"></div>
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                            <div class="flex-1 pt-1 bg-primary/5 rounded-xl p-4 -mt-2 border border-primary/10">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="font-bold text-primary">Wawul Aththe Ganan (Vegetative Growth)</h4>
+                                    <span class="text-xs bg-primary text-white px-2 py-0.5 rounded-full font-medium animate-pulse">In Progress</span>
+                                </div>
+                                <p class="text-sm text-slate-700 mb-3">Rapid leaf development phase. Plants reaching 30-40cm height. Organic pest management applied weekly.</p>
+                                <div class="grid grid-cols-3 gap-3 mb-3">
+                                    <div class="bg-white rounded-lg p-2 text-center border border-primary/20">
+                                        <p class="text-xs text-slate-500">Height</p>
+                                        <p class="font-bold text-slate-900">35 cm</p>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-2 text-center border border-primary/20">
+                                        <p class="text-xs text-slate-500">Leaves</p>
+                                        <p class="font-bold text-slate-900">12-15</p>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-2 text-center border border-primary/20">
+                                        <p class="text-xs text-slate-500">Health</p>
+                                        <p class="font-bold text-green-600">Excellent</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 text-xs text-slate-500">
+                                    <span><i class="far fa-calendar mr-1"></i>Jun 21 - Jul 25</span>
+                                    <span><i class="fas fa-leaf mr-1"></i>NPK fertilizer applied</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 4: Upcoming -->
+                        <div class="relative flex gap-4 mb-8 stage-card opacity-60">
+                            <div class="stage-dot z-10 w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div class="flex-1 pt-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="font-bold text-slate-700">Maha Aththe Ganan (Bulb Formation)</h4>
+                                    <span class="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-medium">Upcoming</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-2">White stem base begins thickening. Reduced watering to concentrate flavors. Expected mid-July.</p>
+                                <div class="flex gap-2 text-xs text-slate-500">
+                                    <span><i class="far fa-calendar mr-1"></i>Jul 26 - Aug 15</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 5: Upcoming -->
+                        <div class="relative flex gap-4 stage-card opacity-60">
+                            <div class="stage-dot z-10 w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-flag-checkered"></i>
+                            </div>
+                            <div class="flex-1 pt-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="font-bold text-slate-700">Aswanu Nelasana (Harvest Ready)</h4>
+                                    <span class="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-medium">Upcoming</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-2">Final maturity check. Harvest scheduled for August 25. Quality inspection and packaging preparation.</p>
+                                <div class="flex gap-2 text-xs text-slate-500">
+                                    <span><i class="far fa-calendar mr-1"></i>Aug 16 - Aug 25</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buyer Requirements Section -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 slide-up" style="animation-delay: 0.5s">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fas fa-clipboard-list text-secondary"></i>
+                            Buyer Requirements & Current Demand
+                        </h3>
+                        <span class="text-sm text-slate-500">Updated 2 hours ago</span>
+                    </div>
+                    
+                    <div class="space-y-5">
+                        <!-- Requirement 1 -->
+                        <div class="border border-slate-100 rounded-xl p-4 hover:border-secondary/30 transition-all">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                        <i class="fas fa-store text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900">Cargills Food City</p>
+                                        <p class="text-xs text-slate-500">Supermarket Chain • Kandy Branch</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-slate-900">400 kg</span>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs text-slate-600">
+                                    <span>Requested</span>
+                                    <span>400 / 1,500 kg</span>
+                                </div>
+                                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-500 demand-bar" style="width: 27%"></div>
+                                </div>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Grade A required</span>
+                                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Weekly delivery</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Requirement 2 -->
+                        <div class="border border-slate-100 rounded-xl p-4 hover:border-secondary/30 transition-all">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                                        <i class="fas fa-utensils text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900">Sera Hotel & Restaurant</p>
+                                        <p class="text-xs text-slate-500">Hospitality • Peradeniya</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-slate-900">250 kg</span>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs text-slate-600">
+                                    <span>Requested</span>
+                                    <span>250 / 1,500 kg</span>
+                                </div>
+                                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-purple-500 demand-bar" style="width: 17%"></div>
+                                </div>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Organic certified</span>
+                                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Morning harvest</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Requirement 3 -->
+                        <div class="border border-slate-100 rounded-xl p-4 hover:border-secondary/30 transition-all">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                                        <i class="fas fa-shopping-basket text-amber-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900">Kandy Central Market</p>
+                                        <p class="text-xs text-slate-500">Wholesale • Multiple vendors</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-slate-900">600 kg</span>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs text-slate-600">
+                                    <span>Requested</span>
+                                    <span>600 / 1,500 kg</span>
+                                </div>
+                                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-amber-500 demand-bar" style="width: 40%"></div>
+                                </div>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Bulk packaging</span>
+                                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Price negotiable</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary Bar -->
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-semibold text-slate-700">Total Demand vs. Supply</span>
+                                <span class="text-sm font-bold text-slate-900">1,250 / 1,500 kg</span>
+                            </div>
+                            <div class="h-3 bg-slate-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-primary to-emerald-400 demand-bar" style="width: 83%"></div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-2 text-center">83% of yield already requested by buyers • 250 kg remaining available</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Reservation Card -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-24 space-y-6">
+                    
+                    <!-- Reserve Now Card -->
+                    <div class="reserve-card bg-white rounded-2xl border-2 border-primary/20 overflow-hidden slide-up" style="animation-delay: 0.3s">
+                        <div class="bg-primary p-5 text-white">
+                            <h3 class="text-xl font-bold mb-1">Reserve Now</h3>
+                            <p class="text-emerald-100 text-sm">Secure your pre-order at exclusive farmer-direct pricing</p>
+                        </div>
+                        
+                        <div class="p-5 space-y-5">
+                            <!-- Price Breakdown -->
+                            <div class="bg-slate-50 rounded-xl p-4 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-slate-600">Pre-Order Price</span>
+                                    <span class="text-lg font-bold text-primary">Rs 200/kg</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-slate-500">Market Price</span>
+                                    <span class="text-slate-400 line-through">Rs 235/kg</span>
+                                </div>
+                                <div class="h-px bg-slate-200"></div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-semibold text-slate-700">Your Savings</span>
+                                    <span class="text-sm font-bold text-green-600">Rs 35/kg (15%)</span>
+                                </div>
+                            </div>
+
+                            <!-- Quantity Selector -->
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Quantity (kg)</label>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="adjustQty(-10)" class="quantity-btn w-10 h-10 rounded-lg border-2 border-slate-200 flex items-center justify-center text-slate-600 hover:border-primary hover:text-primary transition-all">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" id="quantityInput" value="100" min="10" max="250" class="flex-1 text-center text-xl font-bold text-slate-900 border-2 border-slate-200 rounded-lg py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" onchange="updateCalculation()">
+                                    <button onclick="adjustQty(10)" class="quantity-btn w-10 h-10 rounded-lg border-2 border-slate-200 flex items-center justify-center text-slate-600 hover:border-primary hover:text-primary transition-all">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="flex justify-between mt-2 text-xs">
+                                    <span class="text-slate-500">Min: 10kg</span>
+                                    <span class="text-slate-500" id="maxQty">Max: 250kg available</span>
+                                </div>
+                            </div>
+
+                            <!-- Calculation -->
+                            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm text-slate-700">Subtotal</span>
+                                    <span class="font-bold text-slate-900" id="subtotal">Rs 20,000</span>
+                                </div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm text-slate-700">Advance Payment (30%)</span>
+                                    <span class="font-bold text-primary" id="advance">Rs 6,000</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs text-slate-500 mt-2 pt-2 border-t border-emerald-200">
+                                    <span>Balance on delivery</span>
+                                    <span id="balance">Rs 14,000</span>
+                                </div>
+                            </div>
+
+                            <!-- Secure Button -->
+                            <button onclick="securePreOrder()" id="secureBtn" class="w-full bg-primary hover:bg-primaryDark text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 text-lg">
+                                <i class="fas fa-lock"></i>
+                                SECURE PRE-ORDER & PAY ADVANCE
+                            </button>
+
+                            <div class="flex items-center justify-center gap-4 text-xs text-slate-500">
+                                <span class="flex items-center gap-1"><i class="fas fa-shield-alt text-primary"></i> SSL Secure</span>
+                                <span class="flex items-center gap-1"><i class="fas fa-undo text-primary"></i> Cancel anytime</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trust Badges -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 slide-up" style="animation-delay: 0.6s">
+                        <h4 class="font-semibold text-slate-900 mb-4 text-sm">Why Pre-Order with Us?</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-100 p-1.5 rounded-md flex-shrink-0 mt-0.5">
+                                    <i class="fas fa-check text-green-600 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-800">Guaranteed Freshness</p>
+                                    <p class="text-xs text-slate-500">Harvested morning of delivery</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-100 p-1.5 rounded-md flex-shrink-0 mt-0.5">
+                                    <i class="fas fa-check text-green-600 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-800">Price Protection</p>
+                                    <p class="text-xs text-slate-500">Locked at Rs 200/kg regardless of market fluctuation</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-100 p-1.5 rounded-md flex-shrink-0 mt-0.5">
+                                    <i class="fas fa-check text-green-600 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-800">Direct from Farmer</p>
+                                    <p class="text-xs text-slate-500">No middlemen, better quality control</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-100 p-1.5 rounded-md flex-shrink-0 mt-0.5">
+                                    <i class="fas fa-check text-green-600 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-800">Full Transparency</p>
+                                    <p class="text-xs text-slate-500">Track growth stages with photo updates</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Farmer -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 slide-up" style="animation-delay: 0.7s">
+                        <h4 class="font-semibold text-slate-900 mb-3 text-sm">Need to discuss?</h4>
+                        <button onclick="contactFarmer()" class="w-full border-2 border-slate-200 hover:border-primary hover:bg-primary/5 text-slate-700 hover:text-primary font-medium py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 mb-2">
+                            <i class="fas fa-comment-dots"></i>
+                            Message Farmer
+                        </button>
+                        <button onclick="callFarmer()" class="w-full border-2 border-slate-200 hover:border-primary hover:bg-primary/5 text-slate-700 hover:text-primary font-medium py-2.5 rounded-lg transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-phone"></i>
+                            Call Sunil Fernando
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeSuccessModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto p-8 text-center slide-up">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 success-checkmark">
+                    <i class="fas fa-check text-4xl text-primary"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900 mb-2">Pre-Order Confirmed!</h3>
+                <p class="text-slate-600 mb-6">Your reservation for <span id="successQty" class="font-bold text-slate-900"></span>kg of Leeks has been secured.</p>
+                
+                <div class="bg-slate-50 rounded-xl p-4 mb-6 text-left space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Order ID</span>
+                        <span class="font-mono font-bold text-slate-900">#FC-2026-8842</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Advance Paid</span>
+                        <span class="font-bold text-primary" id="successAdvance"></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Harvest Date</span>
+                        <span class="font-bold text-slate-900">Aug 25, 2026</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Farmer</span>
+                        <span class="font-bold text-slate-900">Sunil Fernando</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="closeSuccessModal()" class="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-all">Close</button>
+                    <button onclick="downloadInvoice()" class="flex-1 px-4 py-2.5 bg-primary hover:bg-primaryDark text-white rounded-lg font-medium shadow-lg shadow-primary/20 transition-all">
+                        <i class="fas fa-download mr-1"></i> Invoice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeContactModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto slide-up">
+                <div class="bg-primary px-6 py-4 flex justify-between items-center rounded-t-2xl">
+                    <h3 class="text-white font-bold text-lg">Message Farmer</h3>
+                    <button onclick="closeContactModal()" class="text-white/80 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" class="w-12 h-12 rounded-xl object-cover">
+                        <div>
+                            <p class="font-bold text-slate-900">Sunil Fernando</p>
+                            <p class="text-xs text-slate-500">Typically replies in 15 min</p>
+                        </div>
+                    </div>
+                    <textarea id="messageText" rows="4" placeholder="Hi Sunil, I'm interested in your leeks harvest. Can we discuss bulk pricing for 200kg?" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none text-sm"></textarea>
+                    <div class="flex gap-2">
+                        <button onclick="closeContactModal()" class="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-all">Cancel</button>
+                        <button onclick="sendMessage()" class="flex-1 px-4 py-2.5 bg-primary hover:bg-primaryDark text-white rounded-lg font-medium shadow-lg shadow-primary/20 transition-all">Send Message</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PRICE_PER_KG = 200;
+        const ADVANCE_PERCENT = 30;
+        const MAX_AVAILABLE = 250;
+        let currentQty = 100;
+
+        function updateCalculation() {
+            const input = document.getElementById('quantityInput');
+            let qty = parseInt(input.value) || 0;
+            
+            // Clamp values
+            if (qty < 10) qty = 10;
+            if (qty > MAX_AVAILABLE) qty = MAX_AVAILABLE;
+            
+            currentQty = qty;
+            input.value = qty;
+            
+            const subtotal = qty * PRICE_PER_KG;
+            const advance = Math.round(subtotal * (ADVANCE_PERCENT / 100));
+            const balance = subtotal - advance;
+            
+            document.getElementById('subtotal').textContent = 'Rs ' + subtotal.toLocaleString();
+            document.getElementById('advance').textContent = 'Rs ' + advance.toLocaleString();
+            document.getElementById('balance').textContent = 'Rs ' + balance.toLocaleString();
+            
+            // Update max label
+            document.getElementById('maxQty').textContent = `Max: ${MAX_AVAILABLE}kg available`;
+        }
+
+        function adjustQty(delta) {
+            const input = document.getElementById('quantityInput');
+            let newQty = parseInt(input.value) + delta;
+            if (newQty >= 10 && newQty <= MAX_AVAILABLE) {
+                input.value = newQty;
+                updateCalculation();
+            }
+        }
+
+        function securePreOrder() {
+            const btn = document.getElementById('secureBtn');
+            const originalText = btn.innerHTML;
+            
+            // Loading state
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                // Show success modal
+                document.getElementById('successQty').textContent = currentQty;
+                document.getElementById('successAdvance').textContent = 'Rs ' + (Math.round(currentQty * PRICE_PER_KG * 0.3)).toLocaleString();
+                document.getElementById('successModal').classList.remove('hidden');
+                
+                // Update cart badge
+                const badge = document.getElementById('cartBadge');
+                badge.textContent = '1';
+                badge.classList.remove('hidden');
+                
+                // Reset button
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 1500);
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        function downloadInvoice() {
+            alert('Invoice download would start here. PDF generation with order details, farmer info, and payment receipt.');
+        }
+
+        function contactFarmer() {
+            document.getElementById('contactModal').classList.remove('hidden');
+        }
+
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.add('hidden');
+            document.getElementById('messageText').value = '';
+        }
+
+        function sendMessage() {
+            const msg = document.getElementById('messageText').value;
+            if (msg.trim()) {
+                closeContactModal();
+                // Show toast notification
+                showToast('Message sent to Sunil Fernando!');
+            }
+        }
+
+        function callFarmer() {
+            alert('Initiating call to Sunil Fernando: +94 77 123 4567\n\nThis would open the device dialer on mobile.');
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 slide-up flex items-center gap-2';
+            toast.innerHTML = `<i class="fas fa-check-circle text-green-400"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCalculation();
+            
+            // Animate demand bars on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const bars = entry.target.querySelectorAll('.demand-bar');
+                        bars.forEach(bar => {
+                            const width = bar.style.width;
+                            bar.style.width = '0%';
+                            setTimeout(() => bar.style.width = width, 100);
+                        });
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.demand-bar').forEach(bar => {
+                const parent = bar.closest('.space-y-5');
+                if (parent) observer.observe(parent);
+            });
+        });
+
+        // Close modals on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSuccessModal();
+                closeContactModal();
+            }
+        });
+    </script>
+</body>
+</html>
